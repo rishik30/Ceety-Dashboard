@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Ceety — Business Dashboard</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Sora:wght@300;400;500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="styles/main.css" />
+	</head>
+	<body>
+		<div class="shell">
+			<!-- ──────────────────────── SIDEBAR ──────────────────────── -->
+			<aside class="sidebar">
+				<div class="sidebar-logo">
+					<div class="brand">Ceety</div>
+					<div class="sub">Business Dashboard</div>
+				</div>
+
+				<div class="sync-status">
+					<div class="sync-dot" id="sync-dot"></div>
+					<div class="sync-label" id="sync-label">Not connected</div>
+				</div>
+
+				<nav class="nav">
+					<div class="nav-label">Operations</div>
+					<div class="nav-item active" onclick="navigate('overview', this)">
+						<span class="nav-icon">◈</span> Overview
+					</div>
+					<div class="nav-item" onclick="navigate('challan', this)">
+						<span class="nav-icon">◉</span> Create Challan
+					</div>
+					<div class="nav-item" onclick="navigate('database', this)">
+						<span class="nav-icon">◫</span> Challan Database
+					</div>
+					<div class="nav-label" style="margin-top: 12px">Finance</div>
+					<div class="nav-item" onclick="navigate('accounts', this)">
+						<span class="nav-icon">◈</span> Accounts
+					</div>
+					<div class="nav-item" onclick="navigate('orders', this)">
+						<span class="nav-icon">◉</span> Order Book
+					</div>
+					<div class="nav-item" onclick="navigate('stock', this)">
+						<span class="nav-icon">◫</span> Stock
+					</div>
+				</nav>
+
+				<div class="sidebar-footer">
+					<div
+						style="
+							font-size: 10px;
+							font-family: var(--mono);
+							color: rgba(255, 255, 255, 0.25);
+							margin-bottom: 6px;
+							letter-spacing: 0.5px;
+						"
+					>
+						APPS SCRIPT URL
+					</div>
+					<input
+						class="gas-url-input"
+						type="url"
+						id="gas-url"
+						placeholder="Paste your Web App URL…"
+					/>
+					<button class="btn-connect" onclick="connectGAS()">
+						⟳ Connect to Sheet
+					</button>
+				</div>
+			</aside>
+
+			<!-- ──────────────────────── MAIN ──────────────────────── -->
+			<main class="main">
+				<div class="offline-banner" id="offline-banner">
+					⚠ Working offline — data is saved locally. Connect your Apps Script
+					URL to sync with Google Sheets.
+				</div>
+
+				<!-- ══ OVERVIEW ══ -->
+				<div class="page active" id="page-overview">
+					<div class="page-header">
+						<div>
+							<h1>Overview</h1>
+							<p>Live snapshot of Ceety's operations</p>
+						</div>
+						<button
+							class="btn btn-secondary btn-sm"
+							onclick="syncAll()"
+							id="sync-btn"
+						>
+							↻ Sync
+						</button>
+					</div>
+					<div class="stat-grid">
+						<div class="stat">
+							<div class="stat-label">Total Challans</div>
+							<div class="stat-val" id="stat-challans">0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Total Revenue</div>
+							<div class="stat-val green" id="stat-revenue">₹0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Stock Items</div>
+							<div class="stat-val" id="stat-stock">0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Pending Orders</div>
+							<div class="stat-val" id="stat-orders">0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Account Balance</div>
+							<div class="stat-val green" id="stat-balance">₹0</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-title">Recent Challans</div>
+						<div class="table-wrap">
+							<table>
+								<thead>
+									<tr>
+										<th>Challan #</th>
+										<th>Party</th>
+										<th>Date</th>
+										<th>Amount</th>
+										<th>Status</th>
+									</tr>
+								</thead>
+								<tbody id="recent-challans">
+									<tr>
+										<td colspan="5" class="empty">No challans yet.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px">
+						<div class="card">
+							<div class="card-title">Stock Summary</div>
+							<div id="stock-summary"><div class="empty">No stock.</div></div>
+						</div>
+						<div class="card">
+							<div class="card-title">Account Summary</div>
+							<div id="account-summary">
+								<div class="empty">No entries.</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- ══ CREATE CHALLAN ══ -->
+				<div class="page" id="page-challan">
+					<div class="page-header">
+						<div>
+							<h1>Create Challan</h1>
+							<p>Fills challan tab, database, and stock automatically.</p>
+						</div>
+					</div>
+					<div
+						style="
+							display: grid;
+							grid-template-columns: 1fr 380px;
+							gap: 24px;
+							align-items: start;
+						"
+					>
+						<div>
+							<div class="card">
+								<div class="card-title">Party Details</div>
+								<div class="form-grid">
+									<div class="form-group">
+										<label>Challan #</label
+										><input type="text" id="ch-no" readonly />
+									</div>
+									<div class="form-group">
+										<label>Date</label><input type="date" id="ch-date" />
+									</div>
+									<div class="form-group span2">
+										<label>Party Name</label
+										><input
+											type="text"
+											id="ch-party"
+											placeholder="e.g. Manjeet Singh"
+											oninput="updatePreview()"
+										/>
+									</div>
+									<div class="form-group span2">
+										<label>Company Name</label
+										><input
+											type="text"
+											id="ch-company"
+											placeholder="e.g. Rishabh Industries"
+											oninput="updatePreview()"
+										/>
+									</div>
+									<div class="form-group span2">
+										<label>Notes / Address</label
+										><textarea
+											id="ch-notes"
+											placeholder="Delivery address or notes…"
+											oninput="updatePreview()"
+										></textarea>
+									</div>
+								</div>
+							</div>
+							<div class="card">
+								<div class="card-title">Order Items</div>
+								<table class="items-table">
+									<thead>
+										<tr>
+											<th style="width: 28%">Description</th>
+											<th style="width: 9%">Qty</th>
+											<th style="width: 11%">Unit</th>
+											<th style="width: 11%">Pcs/Unit</th>
+											<th style="width: 14%">Unit Price</th>
+											<th style="width: 14%">Total</th>
+											<th style="width: 7%"></th>
+										</tr>
+									</thead>
+									<tbody id="items-body"></tbody>
+								</table>
+								<button
+									class="btn btn-secondary btn-sm"
+									style="margin-top: 10px"
+									onclick="addItem()"
+								>
+									+ Add Item
+								</button>
+								<div class="divider"></div>
+								<div class="form-grid">
+									<div class="form-group">
+										<label>Adjustments (±₹)</label
+										><input
+											type="number"
+											id="ch-adjustment"
+											value="0"
+											oninput="updatePreview()"
+										/>
+									</div>
+									<div></div>
+								</div>
+							</div>
+							<div class="btn-row">
+								<button
+									class="btn btn-primary"
+									id="gen-btn"
+									onclick="generateChallan()"
+								>
+									✦ Generate Challan
+								</button>
+								<button class="btn btn-secondary" onclick="clearChallanForm()">
+									↺ Reset
+								</button>
+								<button class="btn btn-secondary" onclick="window.print()">
+									⎙ Print
+								</button>
+							</div>
+						</div>
+
+						<!-- LIVE PREVIEW -->
+						<div>
+							<div class="card-title" style="margin-bottom: 12px">
+								Live Preview
+							</div>
+							<div class="challan-preview">
+								<div class="ch-header">
+									<div>
+										<div class="ch-brand">Ceety</div>
+										<div class="ch-sub">Delivery Challan</div>
+									</div>
+									<div class="ch-no" id="prev-no">—</div>
+								</div>
+								<div class="ch-meta">
+									<div class="ch-meta-item">
+										<div class="lbl">Party</div>
+										<div class="val" id="prev-party">—</div>
+									</div>
+									<div class="ch-meta-item">
+										<div class="lbl">Company</div>
+										<div class="val" id="prev-company">—</div>
+									</div>
+									<div class="ch-meta-item">
+										<div class="lbl">Date</div>
+										<div class="val" id="prev-date">—</div>
+									</div>
+									<div class="ch-meta-item">
+										<div class="lbl">Notes</div>
+										<div
+											class="val"
+											id="prev-notes"
+											style="font-size: 11px; color: var(--text2)"
+										>
+											—
+										</div>
+									</div>
+								</div>
+								<table>
+									<thead>
+										<tr>
+											<th>Description</th>
+											<th>Qty</th>
+											<th>Unit</th>
+											<th>Pcs/U</th>
+											<th>Price</th>
+											<th>Total</th>
+										</tr>
+									</thead>
+									<tbody id="prev-items"></tbody>
+								</table>
+								<div class="ch-total">
+									<div class="ch-total-row">
+										<span style="color: var(--text2)">Subtotal</span
+										><span id="prev-subtotal">₹0.00</span>
+									</div>
+									<div class="ch-total-row">
+										<span style="color: var(--text2)">Adjustment</span
+										><span id="prev-adj">₹0.00</span>
+									</div>
+									<div class="ch-total-row final">
+										<span>Total</span><span id="prev-total">₹0.00</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- ══ DATABASE ══ -->
+				<div class="page" id="page-database">
+					<div class="page-header">
+						<div>
+							<h1>Challan Database</h1>
+							<p>Auto-updated on every challan creation.</p>
+						</div>
+						<button class="btn btn-secondary btn-sm" onclick="loadChallans()">
+							↻ Refresh
+						</button>
+					</div>
+					<div class="card">
+						<div
+							style="
+								display: flex;
+								justify-content: space-between;
+								align-items: center;
+								margin-bottom: 16px;
+							"
+						>
+							<input
+								type="text"
+								id="db-search"
+								placeholder="Search party, challan #, date…"
+								style="max-width: 300px"
+								oninput="filterDatabase()"
+							/>
+							<span
+								id="db-count"
+								style="
+									font-family: var(--mono);
+									font-size: 12px;
+									color: var(--text3);
+								"
+							></span>
+						</div>
+						<div class="table-wrap">
+							<table>
+								<thead>
+									<tr>
+										<th>Challan #</th>
+										<th>Date</th>
+										<th>Party</th>
+										<th>Company</th>
+										<th>Items</th>
+										<th>Subtotal</th>
+										<th>Adj.</th>
+										<th>Total</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody id="db-body">
+									<tr>
+										<td colspan="9" class="empty">No challans yet.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<!-- ══ ACCOUNTS ══ -->
+				<div class="page" id="page-accounts">
+					<div class="page-header">
+						<div>
+							<h1>Accounts</h1>
+							<p>Debit & credit ledger — synced to Google Sheets.</p>
+						</div>
+						<button class="btn btn-secondary btn-sm" onclick="loadAccounts()">
+							↻ Refresh
+						</button>
+					</div>
+					<div class="card">
+						<div class="card-title">New Entry</div>
+						<div class="form-grid cols3">
+							<div class="form-group">
+								<label>Date</label><input type="date" id="acc-date" />
+							</div>
+							<div class="form-group">
+								<label>Description</label
+								><input
+									type="text"
+									id="acc-desc"
+									placeholder="e.g. Challan payment — Manjeet"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Type</label
+								><select id="acc-type">
+									<option value="credit">Credit (Income)</option>
+									<option value="debit">Debit (Expense)</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label>Amount (₹)</label
+								><input
+									type="number"
+									id="acc-amount"
+									placeholder="0.00"
+									min="0"
+									step="0.01"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Category</label
+								><select id="acc-category">
+									<option>Challan Payment</option>
+									<option>Purchase</option>
+									<option>Salary</option>
+									<option>Transport</option>
+									<option>Miscellaneous</option>
+									<option>Other</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label>Reference / Note</label
+								><input
+									type="text"
+									id="acc-ref"
+									placeholder="e.g. Challan #C90AB83E"
+								/>
+							</div>
+						</div>
+						<div class="btn-row">
+							<button
+								class="btn btn-primary"
+								id="acc-btn"
+								onclick="submitAccountEntry()"
+							>
+								+ Add Entry
+							</button>
+							<button class="btn btn-secondary" onclick="clearAccForm()">
+								↺ Reset
+							</button>
+						</div>
+					</div>
+					<div class="stat-grid" style="grid-template-columns: repeat(4, 1fr)">
+						<div class="stat">
+							<div class="stat-label">Total Entries</div>
+							<div class="stat-val" id="acc-total-count">0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Total Credits</div>
+							<div class="stat-val green" id="acc-total-credit">₹0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Total Debits</div>
+							<div class="stat-val red" id="acc-total-debit">₹0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Net Balance</div>
+							<div class="stat-val" id="acc-net">₹0</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-title">Ledger</div>
+						<div class="table-wrap">
+							<table>
+								<thead>
+									<tr>
+										<th>Date</th>
+										<th>Description</th>
+										<th>Category</th>
+										<th>Type</th>
+										<th>Amount</th>
+										<th>Reference</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody id="acc-body">
+									<tr>
+										<td colspan="7" class="empty">No entries yet.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<!-- ══ ORDERS ══ -->
+				<div class="page" id="page-orders">
+					<div class="page-header">
+						<div>
+							<h1>Order Book</h1>
+							<p>Incoming orders — synced to Google Sheets.</p>
+						</div>
+						<button class="btn btn-secondary btn-sm" onclick="loadOrders()">
+							↻ Refresh
+						</button>
+					</div>
+					<div class="card">
+						<div class="card-title">New Order</div>
+						<div class="form-grid">
+							<div class="form-group">
+								<label>Date</label><input type="date" id="ord-date" />
+							</div>
+							<div class="form-group">
+								<label>Order #</label><input type="text" id="ord-no" readonly />
+							</div>
+							<div class="form-group">
+								<label>Party Name</label
+								><input
+									type="text"
+									id="ord-party"
+									placeholder="Customer name"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Company</label
+								><input
+									type="text"
+									id="ord-company"
+									placeholder="Company name"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Description</label
+								><input
+									type="text"
+									id="ord-desc"
+									placeholder="e.g. Ceety Bag 50kg"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Quantity</label
+								><input type="number" id="ord-qty" placeholder="0" min="0" />
+							</div>
+							<div class="form-group">
+								<label>Unit</label
+								><select id="ord-unit">
+									<option>bag</option>
+									<option>pkt</option>
+									<option>kg</option>
+									<option>pcs</option>
+									<option>box</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label>Status</label
+								><select id="ord-status">
+									<option value="pending">Pending</option>
+									<option value="fulfilled">Fulfilled</option>
+									<option value="partial">Partial</option>
+									<option value="cancelled">Cancelled</option>
+								</select>
+							</div>
+							<div class="form-group span2">
+								<label>Notes</label
+								><input
+									type="text"
+									id="ord-notes"
+									placeholder="Delivery instructions…"
+								/>
+							</div>
+						</div>
+						<div class="btn-row">
+							<button class="btn btn-primary" id="ord-btn" onclick="addOrder()">
+								+ Add Order
+							</button>
+							<button class="btn btn-secondary" onclick="clearOrderForm()">
+								↺ Reset
+							</button>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-title">Orders</div>
+						<div class="table-wrap">
+							<table>
+								<thead>
+									<tr>
+										<th>Order #</th>
+										<th>Date</th>
+										<th>Party</th>
+										<th>Description</th>
+										<th>Qty</th>
+										<th>Status</th>
+										<th>Notes</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody id="orders-body">
+									<tr>
+										<td colspan="8" class="empty">No orders yet.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<!-- ══ STOCK ══ -->
+				<div class="page" id="page-stock">
+					<div class="page-header">
+						<div>
+							<h1>Stock</h1>
+							<p>
+								Challan generation auto-records OUT. Use this form for purchases
+								(IN) or manual adjustments only.
+							</p>
+						</div>
+						<button class="btn btn-secondary btn-sm" onclick="loadStock()">
+							↻ Refresh
+						</button>
+					</div>
+
+					<!-- LIVE BALANCE CARDS -->
+					<div
+						style="
+							display: grid;
+							grid-template-columns: 1fr 1fr;
+							gap: 16px;
+							margin-bottom: 20px;
+						"
+					>
+						<div
+							style="
+								background: var(--surface);
+								border: 1px solid var(--border);
+								border-radius: var(--radius-lg);
+								padding: 20px 24px;
+							"
+						>
+							<div
+								style="
+									display: flex;
+									justify-content: space-between;
+									align-items: center;
+									margin-bottom: 14px;
+								"
+							>
+								<div
+									style="
+										font-size: 12px;
+										font-family: var(--mono);
+										font-weight: 500;
+										color: var(--text2);
+										text-transform: uppercase;
+										letter-spacing: 0.8px;
+									"
+								>
+									Regular Ceety
+								</div>
+								<span class="badge badge-green" id="stk-reg-status"
+									>In Stock</span
+								>
+							</div>
+							<div
+								style="
+									display: grid;
+									grid-template-columns: repeat(3, 1fr);
+									gap: 10px;
+								"
+							>
+								<div
+									style="
+										text-align: center;
+										background: var(--surface2);
+										border-radius: 8px;
+										padding: 12px 8px;
+									"
+								>
+									<div
+										style="
+											font-size: 11px;
+											color: var(--text3);
+											font-family: var(--mono);
+											margin-bottom: 4px;
+										"
+									>
+										BAG
+									</div>
+									<div
+										style="
+											font-size: 22px;
+											font-weight: 600;
+											font-family: var(--mono);
+											color: var(--accent);
+										"
+										id="stk-reg-bag"
+									>
+										—
+									</div>
+								</div>
+								<div
+									style="
+										text-align: center;
+										background: var(--surface2);
+										border-radius: 8px;
+										padding: 12px 8px;
+									"
+								>
+									<div
+										style="
+											font-size: 11px;
+											color: var(--text3);
+											font-family: var(--mono);
+											margin-bottom: 4px;
+										"
+									>
+										PKT
+									</div>
+									<div
+										style="
+											font-size: 22px;
+											font-weight: 600;
+											font-family: var(--mono);
+											color: var(--text);
+										"
+										id="stk-reg-pkt"
+									>
+										—
+									</div>
+								</div>
+								<div
+									style="
+										text-align: center;
+										background: var(--surface2);
+										border-radius: 8px;
+										padding: 12px 8px;
+									"
+								>
+									<div
+										style="
+											font-size: 11px;
+											color: var(--text3);
+											font-family: var(--mono);
+											margin-bottom: 4px;
+										"
+									>
+										PCS
+									</div>
+									<div
+										style="
+											font-size: 22px;
+											font-weight: 600;
+											font-family: var(--mono);
+											color: var(--text);
+										"
+										id="stk-reg-pcs"
+									>
+										—
+									</div>
+								</div>
+							</div>
+							<div
+								style="
+									margin-top: 12px;
+									display: flex;
+									justify-content: space-between;
+									font-size: 11px;
+									font-family: var(--mono);
+									color: var(--text3);
+									padding-top: 10px;
+									border-top: 1px solid var(--border);
+								"
+							>
+								<span
+									>Total IN:
+									<span id="stk-reg-in" style="color: var(--accent)">—</span>
+									pcs</span
+								>
+								<span
+									>Total OUT:
+									<span id="stk-reg-out" style="color: var(--danger)">—</span>
+									pcs</span
+								>
+							</div>
+						</div>
+
+						<div
+							style="
+								background: var(--surface);
+								border: 1px solid var(--border);
+								border-radius: var(--radius-lg);
+								padding: 20px 24px;
+							"
+						>
+							<div
+								style="
+									display: flex;
+									justify-content: space-between;
+									align-items: center;
+									margin-bottom: 14px;
+								"
+							>
+								<div
+									style="
+										font-size: 12px;
+										font-family: var(--mono);
+										font-weight: 500;
+										color: var(--text2);
+										text-transform: uppercase;
+										letter-spacing: 0.8px;
+									"
+								>
+									Small Ceety
+								</div>
+								<span class="badge badge-green" id="stk-sml-status"
+									>In Stock</span
+								>
+							</div>
+							<div
+								style="
+									display: grid;
+									grid-template-columns: repeat(3, 1fr);
+									gap: 10px;
+								"
+							>
+								<div
+									style="
+										text-align: center;
+										background: var(--surface2);
+										border-radius: 8px;
+										padding: 12px 8px;
+									"
+								>
+									<div
+										style="
+											font-size: 11px;
+											color: var(--text3);
+											font-family: var(--mono);
+											margin-bottom: 4px;
+										"
+									>
+										BAG
+									</div>
+									<div
+										style="
+											font-size: 22px;
+											font-weight: 600;
+											font-family: var(--mono);
+											color: var(--accent);
+										"
+										id="stk-sml-bag"
+									>
+										—
+									</div>
+								</div>
+								<div
+									style="
+										text-align: center;
+										background: var(--surface2);
+										border-radius: 8px;
+										padding: 12px 8px;
+									"
+								>
+									<div
+										style="
+											font-size: 11px;
+											color: var(--text3);
+											font-family: var(--mono);
+											margin-bottom: 4px;
+										"
+									>
+										PKT
+									</div>
+									<div
+										style="
+											font-size: 22px;
+											font-weight: 600;
+											font-family: var(--mono);
+											color: var(--text);
+										"
+										id="stk-sml-pkt"
+									>
+										—
+									</div>
+								</div>
+								<div
+									style="
+										text-align: center;
+										background: var(--surface2);
+										border-radius: 8px;
+										padding: 12px 8px;
+									"
+								>
+									<div
+										style="
+											font-size: 11px;
+											color: var(--text3);
+											font-family: var(--mono);
+											margin-bottom: 4px;
+										"
+									>
+										PCS
+									</div>
+									<div
+										style="
+											font-size: 22px;
+											font-weight: 600;
+											font-family: var(--mono);
+											color: var(--text);
+										"
+										id="stk-sml-pcs"
+									>
+										—
+									</div>
+								</div>
+							</div>
+							<div
+								style="
+									margin-top: 12px;
+									display: flex;
+									justify-content: space-between;
+									font-size: 11px;
+									font-family: var(--mono);
+									color: var(--text3);
+									padding-top: 10px;
+									border-top: 1px solid var(--border);
+								"
+							>
+								<span
+									>Total IN:
+									<span id="stk-sml-in" style="color: var(--accent)">—</span>
+									pcs</span
+								>
+								<span
+									>Total OUT:
+									<span id="stk-sml-out" style="color: var(--danger)">—</span>
+									pcs</span
+								>
+							</div>
+						</div>
+					</div>
+
+					<!-- MANUAL ADJUSTMENT FORM -->
+					<div class="card">
+						<div class="card-title">Manual Adjustment</div>
+						<div
+							style="
+								background: var(--warn-light);
+								border: 1px solid #f0d090;
+								border-radius: 8px;
+								padding: 10px 14px;
+								margin-bottom: 16px;
+								font-size: 12px;
+								color: var(--warn);
+								font-family: var(--mono);
+							"
+						>
+							⚠ Challan generation automatically records stock OUT. Use this
+							form only for purchases (IN) or losses / damages / returns (OUT).
+						</div>
+						<div class="form-grid cols3">
+							<div class="form-group">
+								<label>Date</label>
+								<input type="date" id="stk-date" />
+							</div>
+							<div class="form-group">
+								<label>Reference / Reason</label>
+								<input
+									type="text"
+									id="stk-ref"
+									placeholder="e.g. Purchase from supplier"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Type</label>
+								<select id="stk-type">
+									<option value="IN">IN — Purchase / Restock</option>
+									<option value="OUT">OUT — Loss / Damage / Return</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label>Product</label>
+								<select id="stk-product">
+									<option value="Regular Ceety">Regular Ceety</option>
+									<option value="Small Ceety">Small Ceety</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label>Quantity</label>
+								<input type="number" id="stk-qty" placeholder="0" min="0" />
+							</div>
+							<div class="form-group">
+								<label>Unit</label>
+								<select id="stk-unit">
+									<option value="pcs">Pcs</option>
+									<option value="pkt">Pkt</option>
+									<option value="bag">Bag</option>
+								</select>
+							</div>
+						</div>
+						<div class="btn-row">
+							<button
+								class="btn btn-primary"
+								id="stk-btn"
+								onclick="addStockEntry()"
+							>
+								+ Add Entry
+							</button>
+							<button class="btn btn-secondary" onclick="clearStockForm()">
+								↺ Reset
+							</button>
+						</div>
+					</div>
+
+					<!-- LEDGER TABLE -->
+					<div class="card">
+						<div
+							style="
+								display: flex;
+								justify-content: space-between;
+								align-items: center;
+								margin-bottom: 14px;
+							"
+						>
+							<div class="card-title" style="margin-bottom: 0">
+								Transaction Ledger
+							</div>
+							<div style="display: flex; gap: 8px">
+								<button
+									class="btn btn-secondary btn-sm"
+									id="lf-all"
+									onclick="filterLedger('all')"
+									style="font-family: var(--mono); font-weight: 600"
+								>
+									All
+								</button>
+								<button
+									class="btn btn-secondary btn-sm"
+									id="lf-in"
+									onclick="filterLedger('IN')"
+									style="font-family: var(--mono); color: var(--accent)"
+								>
+									IN
+								</button>
+								<button
+									class="btn btn-secondary btn-sm"
+									id="lf-out"
+									onclick="filterLedger('OUT')"
+									style="font-family: var(--mono); color: var(--danger)"
+								>
+									OUT
+								</button>
+							</div>
+						</div>
+						<div class="table-wrap">
+							<table>
+								<thead>
+									<tr>
+										<th>Date</th>
+										<th>Reference</th>
+										<th>Type</th>
+										<th>Product</th>
+										<th>Pcs</th>
+										<th>Pkt</th>
+										<th>Bag</th>
+									</tr>
+								</thead>
+								<tbody id="stock-body">
+									<tr>
+										<td colspan="7" class="empty">No transactions yet.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+
+		<div class="toast" id="toast"></div>
+		<div class="modal-backdrop" id="confirm-modal" aria-hidden="true">
+			<div
+				class="modal"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="confirm-title"
+			>
+				<div class="modal-title" id="confirm-title">Confirm action</div>
+				<div class="modal-message" id="confirm-message"></div>
+				<div class="modal-actions">
+					<button class="btn btn-secondary btn-sm" id="confirm-cancel">
+						Cancel
+					</button>
+					<button class="btn btn-danger btn-sm" id="confirm-ok">Delete</button>
+				</div>
+			</div>
+		</div>
+
+		<script src="scripts/state.js"></script>
+		<script src="scripts/api.js"></script>
+		<script src="scripts/navigation.js"></script>
+		<script src="scripts/utils.js"></script>
+		<script src="scripts/challan.js"></script>
+		<script src="scripts/database.js"></script>
+		<script src="scripts/accounts.js"></script>
+		<script src="scripts/orders.js"></script>
+		<script src="scripts/stock.js"></script>
+		<script src="scripts/overview.js"></script>
+	</body>
+</html>
