@@ -510,78 +510,239 @@
 				<div class="page" id="page-orders">
 					<div class="page-header">
 						<div>
-							<h1>Order Book</h1>
-							<p>Incoming orders — synced to Google Sheets.</p>
+							<h1>Purchase Orders</h1>
+							<p>
+								Track stock bought from suppliers — products, payments and
+								delivery.
+							</p>
 						</div>
 						<button class="btn btn-secondary btn-sm" onclick="loadOrders()">
 							↻ Refresh
 						</button>
 					</div>
+
+					<!-- SUMMARY STATS -->
+					<div
+						class="stat-grid"
+						style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px"
+					>
+						<div class="stat">
+							<div class="stat-label">Total Orders</div>
+							<div class="stat-val" id="po-stat-total">0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Total Value</div>
+							<div class="stat-val" id="po-stat-value">₹0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Amount Paid</div>
+							<div class="stat-val green" id="po-stat-paid">₹0</div>
+						</div>
+						<div class="stat">
+							<div class="stat-label">Amount Due</div>
+							<div class="stat-val red" id="po-stat-due">₹0</div>
+						</div>
+					</div>
+
+					<!-- FORM -->
 					<div class="card">
-						<div class="card-title">New Order</div>
-						<div class="form-grid">
+						<div class="card-title">New Purchase Order</div>
+						<div class="form-grid cols3">
 							<div class="form-group">
-								<label>Date</label><input type="date" id="ord-date" />
+								<label>Order #</label>
+								<input type="text" id="ord-no" readonly />
 							</div>
 							<div class="form-group">
-								<label>Order #</label><input type="text" id="ord-no" readonly />
+								<label>Order Date</label>
+								<input type="date" id="ord-date" />
 							</div>
 							<div class="form-group">
-								<label>Party Name</label
-								><input
+								<label>Expected Delivery</label>
+								<input type="date" id="ord-delivery" />
+							</div>
+							<div class="form-group span3">
+								<label>Supplier</label>
+								<input
 									type="text"
-									id="ord-party"
-									placeholder="Customer name"
-								/>
-							</div>
-							<div class="form-group">
-								<label>Company</label
-								><input
-									type="text"
-									id="ord-company"
-									placeholder="Company name"
-								/>
-							</div>
-							<div class="form-group">
-								<label>Description</label
-								><input
-									type="text"
-									id="ord-desc"
-									placeholder="e.g. Ceety Bag 50kg"
-								/>
-							</div>
-							<div class="form-group">
-								<label>Quantity</label
-								><input type="number" id="ord-qty" placeholder="0" min="0" />
-							</div>
-							<div class="form-group">
-								<label>Unit</label
-								><select id="ord-unit">
-									<option>bag</option>
-									<option>pkt</option>
-									<option>kg</option>
-									<option>pcs</option>
-									<option>box</option>
-								</select>
-							</div>
-							<div class="form-group">
-								<label>Status</label
-								><select id="ord-status">
-									<option value="pending">Pending</option>
-									<option value="fulfilled">Fulfilled</option>
-									<option value="partial">Partial</option>
-									<option value="cancelled">Cancelled</option>
-								</select>
-							</div>
-							<div class="form-group span2">
-								<label>Notes</label
-								><input
-									type="text"
-									id="ord-notes"
-									placeholder="Delivery instructions…"
+									id="ord-supplier"
+									placeholder="e.g. Ashish"
 								/>
 							</div>
 						</div>
+
+						<!-- ITEMS -->
+						<div style="margin-top: 20px">
+							<div
+								style="
+									display: flex;
+									justify-content: space-between;
+									align-items: center;
+									margin-bottom: 10px;
+								"
+							>
+								<div class="card-title" style="margin-bottom: 0">
+									Order Items
+								</div>
+								<button
+									class="btn btn-secondary btn-sm"
+									onclick="addOrderItem()"
+								>
+									+ Add Item
+								</button>
+							</div>
+							<table class="items-table" id="ord-items-table">
+								<thead>
+									<tr>
+										<th style="width: 30%">Product</th>
+										<th style="width: 12%">Qty</th>
+										<th style="width: 12%">Unit</th>
+										<th style="width: 18%">Rate (₹/unit)</th>
+										<th style="width: 18%">Total</th>
+										<th style="width: 10%"></th>
+									</tr>
+								</thead>
+								<tbody id="ord-items-body"></tbody>
+							</table>
+						</div>
+
+						<!-- OVERHEADS -->
+						<div style="margin-top: 20px">
+							<div
+								style="
+									display: flex;
+									justify-content: space-between;
+									align-items: center;
+									margin-bottom: 10px;
+								"
+							>
+								<div class="card-title" style="margin-bottom: 0">
+									Overhead Charges
+								</div>
+								<button
+									class="btn btn-secondary btn-sm"
+									onclick="addOverheadItem()"
+								>
+									+ Add Charge
+								</button>
+							</div>
+							<table class="items-table" id="ord-overhead-table">
+								<thead>
+									<tr>
+										<th style="width: 55%">Description</th>
+										<th style="width: 30%">Amount (₹)</th>
+										<th style="width: 15%"></th>
+									</tr>
+								</thead>
+								<tbody id="ord-overhead-body"></tbody>
+							</table>
+						</div>
+
+						<div class="divider"></div>
+
+						<!-- TOTALS SUMMARY -->
+						<div
+							style="
+								display: flex;
+								justify-content: flex-end;
+								margin-bottom: 20px;
+							"
+						>
+							<div style="min-width: 280px">
+								<div
+									style="
+										display: flex;
+										justify-content: space-between;
+										padding: 6px 0;
+										font-size: 13px;
+									"
+								>
+									<span style="color: var(--text2)">Subtotal (Items)</span>
+									<span
+										id="ord-subtotal-display"
+										style="font-family: var(--mono)"
+										>₹0.00</span
+									>
+								</div>
+								<div
+									style="
+										display: flex;
+										justify-content: space-between;
+										padding: 6px 0;
+										font-size: 13px;
+									"
+								>
+									<span style="color: var(--text2)">Overhead Charges</span>
+									<span
+										id="ord-overhead-display"
+										style="font-family: var(--mono)"
+										>₹0.00</span
+									>
+								</div>
+								<div
+									style="
+										display: flex;
+										justify-content: space-between;
+										padding: 8px 0;
+										font-size: 15px;
+										font-weight: 600;
+										border-top: 1.5px solid var(--border);
+										margin-top: 4px;
+										color: var(--accent);
+									"
+								>
+									<span>Total</span>
+									<span id="ord-total-display" style="font-family: var(--mono)"
+										>₹0.00</span
+									>
+								</div>
+							</div>
+						</div>
+
+						<!-- PAYMENT -->
+						<div class="form-grid cols3">
+							<div class="form-group">
+								<label>Amount Paid (₹)</label>
+								<input
+									type="number"
+									id="ord-paid"
+									placeholder="0.00"
+									min="0"
+									step="0.01"
+									oninput="calcOrderDue()"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Payment Date</label>
+								<input type="date" id="ord-payment-date" />
+							</div>
+							<div class="form-group">
+								<label>Amount Due</label>
+								<input
+									type="text"
+									id="ord-due"
+									readonly
+									placeholder="Auto-calculated"
+								/>
+							</div>
+							<div class="form-group">
+								<label>Status</label>
+								<select id="ord-status">
+									<option value="Pending">Pending</option>
+									<option value="Partial">Partial</option>
+									<option value="Paid">Paid</option>
+									<option value="Cancelled">Cancelled</option>
+								</select>
+							</div>
+							<div class="form-group span2">
+								<label>Notes</label>
+								<input
+									type="text"
+									id="ord-notes"
+									placeholder="Delivery instructions, remarks…"
+								/>
+							</div>
+						</div>
+
 						<div class="btn-row">
 							<button class="btn btn-primary" id="ord-btn" onclick="addOrder()">
 								+ Add Order
@@ -591,17 +752,55 @@
 							</button>
 						</div>
 					</div>
+
+					<!-- ORDERS TABLE -->
 					<div class="card">
-						<div class="card-title">Orders</div>
+						<div
+							style="
+								display: flex;
+								justify-content: space-between;
+								align-items: center;
+								margin-bottom: 14px;
+							"
+						>
+							<div class="card-title" style="margin-bottom: 0">
+								All Purchase Orders
+							</div>
+							<div style="display: flex; gap: 8px; align-items: center">
+								<input
+									type="text"
+									id="ord-search"
+									placeholder="Search supplier, order #…"
+									style="max-width: 220px; font-size: 12px"
+									oninput="renderOrders()"
+								/>
+								<select
+									id="ord-filter-status"
+									onchange="renderOrders()"
+									style="font-size: 12px; padding: 7px 10px; width: auto"
+								>
+									<option value="all">All Status</option>
+									<option value="Pending">Pending</option>
+									<option value="Partial">Partial</option>
+									<option value="Paid">Paid</option>
+									<option value="Cancelled">Cancelled</option>
+								</select>
+							</div>
+						</div>
 						<div class="table-wrap">
 							<table>
 								<thead>
 									<tr>
 										<th>Order #</th>
 										<th>Date</th>
-										<th>Party</th>
-										<th>Description</th>
-										<th>Qty</th>
+										<th>Exp. Delivery</th>
+										<th>Supplier</th>
+										<th>Items</th>
+										<th>Subtotal</th>
+										<th>Overhead</th>
+										<th>Total</th>
+										<th>Paid</th>
+										<th>Due</th>
 										<th>Status</th>
 										<th>Notes</th>
 										<th></th>
@@ -609,7 +808,7 @@
 								</thead>
 								<tbody id="orders-body">
 									<tr>
-										<td colspan="8" class="empty">No orders yet.</td>
+										<td colspan="13" class="empty">No purchase orders yet.</td>
 									</tr>
 								</tbody>
 							</table>

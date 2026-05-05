@@ -4,3 +4,11 @@ https://script.google.com/macros/s/AKfycbxf4p8e6sOxr-CzM0HnVqdAQ52v82upIovWWjMHk
 v1.1 
 update account function
 https://script.google.com/macros/s/AKfycbxf4p8e6sOxr-CzM0HnVqdAQ52v82upIovWWjMHkGFIBql0RNQ9jXBX_GHasT-NzNtjEg/exec
+
+v1.2
+New order page and logic
+https://script.google.com/macros/s/AKfycbzY_2cjBtVQGjdIHfdLnCUci2b07Uu3dvqgyO1aNY4vhLcL2eSsaNWMDKfDMoC3sf3PnQ/exec
+
+v1.2.1
+Del order + update order payment functions
+https://script.google.com/macros/s/AKfycbweOTbPTsAZq9nlc_9yUd3loyuzojmmmwEY9MAnDq5SctzhZqg9arM61YKOXPl155t6MQ/exec

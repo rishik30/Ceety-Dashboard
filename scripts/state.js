@@ -12,6 +12,8 @@ const S = {
 	items: [], // challan line items being built
 	editingAccountId: null,
 	orderSeq: 1,
+	orderItems: [],
+	orderOverheads: [],
 };
 
 // ── Restore saved URL ──

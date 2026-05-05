@@ -73,15 +73,19 @@ const ACC_HEADERS = [
 // A=Order#  B=Date  C=Party  D=Company  E=Description  F=Qty  G=Unit  H=Status  I=Notes  J=CreatedAt
 const ORD_HEADERS = [
 	'Order #',
-	'Date',
-	'Party',
-	'Company',
-	'Description',
-	'Qty',
-	'Unit',
+	'Order Date',
+	'Expected Delivery',
+	'Supplier',
+	'Items (JSON)',
+	'Overhead (JSON)',
+	'Subtotal',
+	'Overhead Total',
+	'Total Amount',
+	'Amount Paid',
+	'Amount Due',
+	'Payment Date',
 	'Status',
 	'Notes',
-	'Created At',
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -138,6 +142,14 @@ function doPost(e) {
 				break;
 			case 'deleteOrder':
 				result = deleteOrder(payload.no);
+				break;
+			case 'updateOrderPayment':
+				result = updateOrderPayment(
+					payload.no,
+					payload.paid,
+					payload.due,
+					payload.status,
+				);
 				break;
 
 			// ── Stock ────────────────────────────────────────────────
@@ -202,7 +214,6 @@ function sheetToObjects(sheet, headers) {
 	const lastRow = sheet.getLastRow();
 	if (lastRow < 2) return [];
 	const data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
-	console.log('Raw sheet data:', sheet, headers, data);
 	return data
 		.filter((row) => row[0] !== '' && row[0] !== null && row[0] !== undefined)
 		.map((row) => {
@@ -561,66 +572,130 @@ function updateAccount(rowIndex, data) {
 	return { success: true };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  ORDER BOOK OPERATIONS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════════════
+//  ORDERS (PURCHASE)
+// ══════════════════════════════════════════════════════════════════════════════
 
 function addOrder(data) {
 	const sheet = getSheet(SHEETS.ORDER_BOOK);
 	ensureHeaders(sheet, ORD_HEADERS);
 
+	// Prefix JSON with a single quote to force Sheets to treat as plain text
+	// This prevents the [ character from being interpreted as a formula
+	const itemsJSON = "'" + JSON.stringify(data.items || []);
+	const overheadJSON = "'" + JSON.stringify(data.overheads || []);
+
 	const row = [
-		data.no,
-		formatDateForSheet(data.date),
-		data.party,
-		data.company || '',
-		data.desc,
-		Number(data.qty),
-		data.unit,
-		data.status || 'pending',
-		data.notes || '',
-		nowISO(),
+		data.no, // A Order #
+		formatDateForSheet(data.date), // B Order Date
+		data.delivery ? formatDateForSheet(data.delivery) : '', // C Expected Delivery
+		data.supplier || '', // D Supplier
+		itemsJSON, // E Items (JSON)
+		overheadJSON, // F Overhead (JSON)
+		Number(data.subtotal || 0), // G Subtotal
+		Number(data.overheadTotal || 0), // H Overhead Total
+		Number(data.total || 0), // I Total Amount
+		Number(data.paid || 0), // J Amount Paid
+		Number(data.due || 0), // K Amount Due
+		data.paymentDate ? formatDateForSheet(data.paymentDate) : '', // L Payment Date
+		data.status || '', // M Status
+		data.notes || '', // N Notes
 	];
+
 	sheet.appendRow(row);
 
 	const lastRow = sheet.getLastRow();
-	sheet.getRange(lastRow, 2).setNumberFormat('DD/MM/YYYY');
-	if (lastRow % 2 === 0)
+
+	// Format date columns as plain text
+	sheet.getRange(lastRow, 2).setNumberFormat('@STRING@'); // B Order Date
+	sheet.getRange(lastRow, 3).setNumberFormat('@STRING@'); // C Expected Delivery
+	sheet.getRange(lastRow, 12).setNumberFormat('@STRING@'); // L Payment Date
+
+	// Format currency columns G to K
+	sheet.getRange(lastRow, 7, 1, 5).setNumberFormat('₹#,##0.00');
+
+	// Alternate row shading
+	if (lastRow % 2 === 0) {
 		sheet.getRange(lastRow, 1, 1, ORD_HEADERS.length).setBackground('#F5F3EE');
+	}
 
 	return { success: true, no: data.no };
+}
+
+function updateOrderPayment(no, paid, due, status) {
+	const sheet = getSheet(SHEETS.ORDER_BOOK);
+	const values = sheet.getDataRange().getValues();
+	for (let i = 1; i < values.length; i++) {
+		if (String(values[i][0]) === String(no)) {
+			sheet.getRange(i + 1, 10).setValue(paid); // Amount Paid   (col J)
+			sheet.getRange(i + 1, 11).setValue(due); // Amount Due    (col K)
+			sheet.getRange(i + 1, 13).setValue(status); // Status        (col M)
+			return { success: true };
+		}
+	}
+	return { error: 'Order not found: ' + no };
 }
 
 function getOrders() {
 	const sheet = getSheet(SHEETS.ORDER_BOOK);
 	ensureHeaders(sheet, ORD_HEADERS);
-	const rows = sheetToObjects(sheet, ORD_HEADERS);
-	return rows.map((r) => ({
-		no: r['Order #'],
-		date: r['Date']
-			? Utilities.formatDate(
-					new Date(r['Date']),
-					Session.getScriptTimeZone(),
-					'yyyy-MM-dd',
-				)
-			: '',
-		party: r['Party'],
-		company: r['Company'],
-		desc: r['Description'],
-		qty: Number(r['Qty']),
-		unit: r['Unit'],
-		status: r['Status'],
-		notes: r['Notes'],
-	}));
+
+	const lastRow = sheet.getLastRow();
+	if (lastRow < 2) return [];
+
+	// Read headers from row 1 to map columns dynamically
+	// This avoids breaking if column order ever shifts
+	const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+	const data = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+
+	return data
+		.filter((row) => row[0] !== '' && row[0] !== null)
+		.map((row) => {
+			// Build object dynamically from actual headers in the sheet
+			const r = {};
+			headers.forEach((h, i) => (r[h] = row[i]));
+
+			const itemsRaw = String(r['Items (JSON)'] || '[]').replace(/^'/, '');
+			const overheadRaw = String(r['Overhead (JSON)'] || '[]').replace(
+				/^'/,
+				'',
+			);
+
+			const rToReturn = {
+				no: r['Order #'] || '',
+				date: r['Order Date'] ? String(r['Order Date']) : '',
+				delivery: r['Expected Delivery'] ? String(r['Expected Delivery']) : '',
+				supplier: r['Supplier'] || '',
+				items: safeParseJSON(itemsRaw, []),
+				overheads: safeParseJSON(overheadRaw, []),
+				subtotal: Number(r['Subtotal'] || 0),
+				overheadTotal: Number(r['Overhead Total'] || 0),
+				total: Number(r['Total Amount'] || 0),
+				paid: Number(r['Amount Paid'] || 0),
+				due: Number(r['Amount Due'] || 0),
+				paymentDate: r['Payment Date'] ? String(r['Payment Date']) : '',
+				status: r['Status'] || '',
+				notes: r['Notes'] || '',
+			};
+
+			return rToReturn;
+		});
 }
 
 function updateOrderStatus(no, status) {
 	const sheet = getSheet(SHEETS.ORDER_BOOK);
 	const values = sheet.getDataRange().getValues();
+
 	for (let i = 1; i < values.length; i++) {
 		if (String(values[i][0]) === String(no)) {
-			sheet.getRange(i + 1, 8).setValue(status);
-			return { success: true };
+			// Find the Status column index dynamically from headers
+			const headers = values[0];
+			const statusColIdx = headers.indexOf('Status');
+			if (statusColIdx === -1)
+				return { error: 'Status column not found in sheet' };
+
+			sheet.getRange(i + 1, statusColIdx + 1).setValue(status);
+			return { success: true, no, status };
 		}
 	}
 	return { error: 'Order not found: ' + no };
@@ -629,10 +704,11 @@ function updateOrderStatus(no, status) {
 function deleteOrder(no) {
 	const sheet = getSheet(SHEETS.ORDER_BOOK);
 	const values = sheet.getDataRange().getValues();
+
 	for (let i = values.length - 1; i >= 1; i--) {
 		if (String(values[i][0]) === String(no)) {
 			sheet.deleteRow(i + 1);
-			return { success: true };
+			return { success: true, no };
 		}
 	}
 	return { error: 'Order not found: ' + no };
@@ -647,9 +723,14 @@ function bootstrap() {
 		challans: getChallans(),
 		accounts: getAccounts(),
 		orders: getOrders(),
-		stockLedger: getStock(), // full transaction history
-		stockSummary: getStockSummary(), // live balances only
+		stockLedger: getStock(),
+		stockSummary: getStockSummary(),
 	};
+}
+
+function testBootstrap() {
+	const result = bootstrap();
+	console.log('ORDERS IN BOOTSTRAP: ' + JSON.stringify(result.orders));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
