@@ -11,4 +11,4 @@ https://script.google.com/macros/s/AKfycbzY_2cjBtVQGjdIHfdLnCUci2b07Uu3dvqgyO1aN
 
 v1.2.1
 Del order + update order payment functions
-https://script.google.com/macros/s/AKfycbweOTbPTsAZq9nlc_9yUd3loyuzojmmmwEY9MAnDq5SctzhZqg9arM61YKOXPl155t6MQ/exec
+https://script.google.com/macros/s/AKfycbypPXbv4fRfD9srutnBi_6_GuLtiJzwzKUSqU_CBJc7A1rx3QVTUaqYHDuSEHsbw-7zxg/exec
