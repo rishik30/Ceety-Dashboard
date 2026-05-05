@@ -103,6 +103,10 @@
 							<div class="stat-val green" id="stat-revenue">₹0</div>
 						</div>
 						<div class="stat">
+							<div class="stat-label">Profit</div>
+							<div class="stat-val green" id="stat-profit">₹0</div>
+						</div>
+						<div class="stat">
 							<div class="stat-label">Stock Items</div>
 							<div class="stat-val" id="stat-stock">0</div>
 						</div>
@@ -113,6 +117,46 @@
 						<div class="stat">
 							<div class="stat-label">Account Balance</div>
 							<div class="stat-val green" id="stat-balance">₹0</div>
+						</div>
+					</div>
+					<div class="card">
+						<div class="card-title">Profit Range</div>
+						<div class="form-grid cols3">
+							<div class="form-group">
+								<label>From</label
+								><input type="date" id="profit-from" onchange="renderOverview()" />
+							</div>
+							<div class="form-group">
+								<label>To</label
+								><input type="date" id="profit-to" onchange="renderOverview()" />
+							</div>
+							<div class="form-group">
+								<label>&nbsp;</label>
+								<button class="btn btn-secondary" onclick="clearProfitRange()">
+									Clear Range
+								</button>
+							</div>
+						</div>
+						<div
+							class="stat-grid"
+							style="grid-template-columns: repeat(4, 1fr); margin-top: 16px; margin-bottom: 0"
+						>
+							<div class="stat">
+								<div class="stat-label">Challans</div>
+								<div class="stat-val" id="profit-count">0</div>
+							</div>
+							<div class="stat">
+								<div class="stat-label">Revenue</div>
+								<div class="stat-val green" id="profit-revenue">₹0</div>
+							</div>
+							<div class="stat">
+								<div class="stat-label">Cost</div>
+								<div class="stat-val red" id="profit-cost">₹0</div>
+							</div>
+							<div class="stat">
+								<div class="stat-label">Profit</div>
+								<div class="stat-val green" id="profit-total">₹0</div>
+							</div>
 						</div>
 					</div>
 					<div class="card">
@@ -380,12 +424,13 @@
 										<th>Subtotal</th>
 										<th>Adj.</th>
 										<th>Total</th>
+										<th>Profit</th>
 										<th></th>
 									</tr>
 								</thead>
 								<tbody id="db-body">
 									<tr>
-										<td colspan="9" class="empty">No challans yet.</td>
+										<td colspan="10" class="empty">No challans yet.</td>
 									</tr>
 								</tbody>
 							</table>
@@ -1213,6 +1258,17 @@
 									<option value="bag">Bag</option>
 								</select>
 							</div>
+							<div class="form-group">
+								<label>Cost Rate (₹/pc)</label>
+								<input
+									type="number"
+									id="stk-cost-rate"
+									placeholder="0.32"
+									min="0"
+									step="0.0001"
+									value="0.32"
+								/>
+							</div>
 						</div>
 						<div class="btn-row">
 							<button
@@ -1279,11 +1335,12 @@
 										<th>Pcs</th>
 										<th>Pkt</th>
 										<th>Bag</th>
+										<th>Cost / Pc</th>
 									</tr>
 								</thead>
 								<tbody id="stock-body">
 									<tr>
-										<td colspan="7" class="empty">No transactions yet.</td>
+										<td colspan="8" class="empty">No transactions yet.</td>
 									</tr>
 								</tbody>
 							</table>
@@ -1316,6 +1373,7 @@
 		<script src="scripts/api.js"></script>
 		<script src="scripts/navigation.js"></script>
 		<script src="scripts/utils.js"></script>
+		<script src="scripts/profit.js"></script>
 		<script src="scripts/challan.js"></script>
 		<script src="scripts/database.js"></script>
 		<script src="scripts/accounts.js"></script>

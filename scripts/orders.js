@@ -275,6 +275,7 @@ async function loadOrders() {
 	try {
 		S.orders = (await api('getOrders')) || [];
 		renderOrders();
+		renderOverview();
 		toast('Orders refreshed.');
 	} catch (e) {
 		toast('Refresh failed: ' + e.message, 'error');

@@ -22,6 +22,10 @@ async function addStockEntry() {
 	const product = document.getElementById('stk-product').value;
 	const qty = parseFloat(document.getElementById('stk-qty').value) || 0;
 	const unit = document.getElementById('stk-unit').value;
+	const costRate =
+		type === 'IN'
+			? parseFloat(document.getElementById('stk-cost-rate').value) || 0.32
+			: 0;
 
 	if (!date) {
 		toast('Date is required.', 'error');
@@ -41,7 +45,7 @@ async function addStockEntry() {
 	const pkt = Math.floor(pcs / c.pcsPerPkt);
 	const bag = Math.floor(pkt / c.pktPerBag);
 
-	const entry = { date, reference: ref, type, product, pcs, pkt, bag };
+	const entry = { date, reference: ref, type, product, pcs, pkt, bag, costRate };
 
 	// Optimistic local update
 	S.stockLedger.unshift(entry);
@@ -55,7 +59,7 @@ async function addStockEntry() {
 		setLoading('stk-btn', true, 'Saving…');
 		try {
 			await api('addStock', {
-				data: { date, reference: ref, type, product, pcs },
+				data: { date, reference: ref, type, product, pcs, costRate },
 			});
 			// Refresh summary from sheet after save
 			const fresh = await api('getStockSummary');
@@ -98,6 +102,7 @@ function rebuildSummaryLocally() {
 function clearStockForm() {
 	document.getElementById('stk-ref').value = '';
 	document.getElementById('stk-qty').value = '';
+	document.getElementById('stk-cost-rate').value = '0.32';
 	document.getElementById('stk-date').value = today();
 }
 
@@ -111,6 +116,7 @@ async function loadStock() {
 		S.stockLedger = ledger || [];
 		S.stockSummary = summary || [];
 		renderStock();
+		renderOverview();
 		toast('Stock refreshed.');
 	} catch (e) {
 		toast('Refresh failed: ' + e.message, 'error');
@@ -179,7 +185,7 @@ function renderLedgerTable() {
 
 	const tbody = document.getElementById('stock-body');
 	if (!rows.length) {
-		tbody.innerHTML = `<tr><td colspan="7" class="empty">No ${filter === 'all' ? '' : filter + ' '}transactions yet.</td></tr>`;
+		tbody.innerHTML = `<tr><td colspan="8" class="empty">No ${filter === 'all' ? '' : filter + ' '}transactions yet.</td></tr>`;
 		return;
 	}
 	tbody.innerHTML = rows
@@ -193,6 +199,7 @@ function renderLedgerTable() {
       <td style="font-family:var(--mono);color:${r.type === 'IN' ? 'var(--accent)' : 'var(--danger)'};">${Number(r.pcs).toLocaleString('en-IN')}</td>
       <td style="font-family:var(--mono);">${Number(r.pkt).toLocaleString('en-IN')}</td>
       <td style="font-family:var(--mono);font-weight:600;">${Number(r.bag).toLocaleString('en-IN')}</td>
+      <td style="font-family:var(--mono);">${r.type === 'IN' ? fmt(Number(r.costRate) || 0.32) : '—'}</td>
     </tr>
   `,
 		)

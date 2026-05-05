@@ -31,6 +31,7 @@ const LEDGER_HEADERS = [
 	'Pcs',
 	'Pkt',
 	'Bag',
+	'Cost Rate / Pc',
 ];
 const SUMMARY_HEADERS = [
 	'Product',
@@ -209,6 +210,18 @@ function ensureHeaders(sheet, headers) {
 			.setBackground('#0F2D20')
 			.setFontColor('#FFFFFF');
 		sheet.setFrozenRows(1);
+	}
+}
+
+function ensureStockLedgerCostHeader(sheet) {
+	if (!sheet) return;
+	if (sheet.getRange(1, 8).getValue() !== LEDGER_HEADERS[7]) {
+		sheet.getRange(1, 8).setValue(LEDGER_HEADERS[7]);
+		sheet
+			.getRange(1, 8)
+			.setFontWeight('bold')
+			.setBackground('#0F2D20')
+			.setFontColor('#FFFFFF');
 	}
 }
 
@@ -810,6 +823,7 @@ function migrateOldStockData(ledger) {
 						CONVERSION['Regular Ceety'].pcsPerPkt /
 						CONVERSION['Regular Ceety'].pktPerBag,
 				),
+				0.32,
 			]);
 		}
 		if (smallIn > 0) {
@@ -825,6 +839,7 @@ function migrateOldStockData(ledger) {
 						CONVERSION['Small Ceety'].pcsPerPkt /
 						CONVERSION['Small Ceety'].pktPerBag,
 				),
+				0.32,
 			]);
 		}
 		if (regularOut > 0) {
@@ -840,6 +855,7 @@ function migrateOldStockData(ledger) {
 						CONVERSION['Regular Ceety'].pcsPerPkt /
 						CONVERSION['Regular Ceety'].pktPerBag,
 				),
+				'',
 			]);
 		}
 		if (smallOut > 0) {
@@ -855,6 +871,7 @@ function migrateOldStockData(ledger) {
 						CONVERSION['Small Ceety'].pcsPerPkt /
 						CONVERSION['Small Ceety'].pktPerBag,
 				),
+				'',
 			]);
 		}
 	}
@@ -877,6 +894,7 @@ function addStock(data) {
 		return {
 			error: 'Stock Ledger sheet not found. Run setupStockSheets() first.',
 		};
+	ensureStockLedgerCostHeader(sheet);
 
 	const conv = CONVERSION[data.product];
 	if (!conv) return { error: 'Unknown product: ' + data.product };
@@ -896,6 +914,7 @@ function addStock(data) {
 		pcs,
 		pkt,
 		bag,
+		Number(data.costRate || 0.32),
 	]);
 	sheet.getRange(sheet.getLastRow(), 1).setNumberFormat('@STRING@');
 
@@ -918,6 +937,7 @@ function deductStockForChallan(challanNo, date, items) {
 		SHEETS.STOCK_LEDGER,
 	);
 	if (!sheet) return { error: 'Stock Ledger sheet not found.' };
+	ensureStockLedgerCostHeader(sheet);
 
 	const safeDateStr = String(date).substring(0, 10); // YYYY-MM-DD
 	const [year, month, day] = safeDateStr.split('-').map(Number);
@@ -950,7 +970,7 @@ function deductStockForChallan(challanNo, date, items) {
 		const conv = CONVERSION[product];
 		const pkt = Math.floor(pcs / conv.pcsPerPkt);
 		const bag = Math.floor(pkt / conv.pktPerBag);
-		newRows.push([dateStr, challanNo, 'OUT', product, pcs, pkt, bag]);
+		newRows.push([dateStr, challanNo, 'OUT', product, pcs, pkt, bag, '']);
 	});
 
 	if (newRows.length > 0) {
@@ -971,6 +991,7 @@ function getStock() {
 		SHEETS.STOCK_LEDGER,
 	);
 	if (!sheet) return [];
+	ensureStockLedgerCostHeader(sheet);
 	const lastRow = sheet.getLastRow();
 	if (lastRow < 2) return [];
 
@@ -986,6 +1007,7 @@ function getStock() {
 			pcs: Number(r[4]),
 			pkt: Number(r[5]),
 			bag: Number(r[6]),
+			costRate: Number(r[7] || 0.32),
 		}));
 }
 

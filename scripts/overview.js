@@ -15,6 +15,7 @@ function renderOverview() {
 
 	document.getElementById('stat-challans').textContent = S.challans.length;
 	document.getElementById('stat-revenue').textContent = fmt(revenue);
+	renderProfitSummary();
 	document.getElementById('stat-stock').textContent = S.stockSummary.length
 		? S.stockSummary.map((s) => s.balanceBag + ' bag').join(' / ')
 		: '—';
