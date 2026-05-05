@@ -16,3 +16,7 @@ https://script.google.com/macros/s/AKfycbypPXbv4fRfD9srutnBi_6_GuLtiJzwzKUSqU_CB
 v1.3
 Challan creation changes + stock deduction fix
 https://script.google.com/macros/s/AKfycbwSrazQJq1O0_r8FoLSEKTaiad_wKwmr9rgf5pb9u2kgb_lmLM14af351RZGwKBIftt/exec
+
+v1.4
+Profit calculation
+https://script.google.com/macros/s/AKfycbzwPs_Jw_k-dmarm8YVxe5afJw8w2hp4zbfwHuK2sfI80nTgisF88zZx6f6h8RRQAoH7Q/exec
