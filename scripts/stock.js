@@ -105,7 +105,7 @@ async function loadStock() {
 	if (!S.gasUrl) return;
 	try {
 		const [ledger, summary] = await Promise.all([
-			api('getStock'),
+			api('getStockLedger'),
 			api('getStockSummary'),
 		]);
 		S.stockLedger = ledger || [];

@@ -12,3 +12,7 @@ https://script.google.com/macros/s/AKfycbzY_2cjBtVQGjdIHfdLnCUci2b07Uu3dvqgyO1aN
 v1.2.1
 Del order + update order payment functions
 https://script.google.com/macros/s/AKfycbypPXbv4fRfD9srutnBi_6_GuLtiJzwzKUSqU_CBJc7A1rx3QVTUaqYHDuSEHsbw-7zxg/exec
+
+v1.3
+Challan creation changes + stock deduction fix
+https://script.google.com/macros/s/AKfycbwSrazQJq1O0_r8FoLSEKTaiad_wKwmr9rgf5pb9u2kgb_lmLM14af351RZGwKBIftt/exec

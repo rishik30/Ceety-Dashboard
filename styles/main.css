@@ -173,6 +173,7 @@ body {
 }
 .gas-url-input:focus {
 	border-color: var(--accent-mid);
+	color: rgba(0, 0, 0, 0.7);
 }
 .gas-url-input::placeholder {
 	color: rgba(255, 255, 255, 0.25);
@@ -691,19 +692,24 @@ tbody tr:hover {
 }
 
 @media print {
-	.sidebar,
-	.btn-row,
-	.nav,
-	.offline-banner {
+	@page {
+		margin: 0; /* removes space where header/footer appear */
+		size: A4;
+	}
+	body > *:not(#print-container) {
 		display: none !important;
 	}
-	.main {
-		padding: 0;
-	}
-	.card {
-		border: none;
+	#print-container {
+		position: fixed !important;
+		top: 0 !important;
+		left: 0 !important;
+		width: 100% !important;
+		padding: 40px !important;
+		background: #fff !important;
+		z-index: 99999 !important;
 	}
 }
+
 ::-webkit-scrollbar {
 	width: 6px;
 }

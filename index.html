@@ -175,7 +175,12 @@
 										><input type="text" id="ch-no" readonly />
 									</div>
 									<div class="form-group">
-										<label>Date</label><input type="date" id="ch-date" />
+										<label>Date</label
+										><input
+											type="date"
+											id="ch-date"
+											onchange="updatePreview()"
+										/>
 									</div>
 									<div class="form-group span2">
 										<label>Party Name</label
@@ -253,7 +258,7 @@
 								<button class="btn btn-secondary" onclick="clearChallanForm()">
 									↺ Reset
 								</button>
-								<button class="btn btn-secondary" onclick="window.print()">
+								<button class="btn btn-secondary" onclick="printChallan()">
 									⎙ Print
 								</button>
 							</div>
@@ -274,7 +279,7 @@
 								</div>
 								<div class="ch-meta">
 									<div class="ch-meta-item">
-										<div class="lbl">Party</div>
+										<div class="lbl">Name</div>
 										<div class="val" id="prev-party">—</div>
 									</div>
 									<div class="ch-meta-item">

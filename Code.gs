@@ -159,6 +159,9 @@ function doPost(e) {
 			case 'getStockSummary':
 				result = getStockSummary();
 				break;
+			case 'getStockLedger':
+				result = getStock();
+				break;
 			case 'deleteStock':
 				result = { error: 'Deletion not supported in ledger mode' };
 				break;
@@ -247,6 +250,10 @@ function createChallan(data) {
 	const dbSheet = getSheet(SHEETS.CHALLAN_DB);
 	ensureHeaders(dbSheet, DB_HEADERS);
 
+	// Safely extract date string — handle undefined, null, or full datetime
+	const rawDate = data.date || '';
+	const dateStr = String(rawDate).substring(0, 10); // safely get YYYY-MM-DD part
+
 	const row = [
 		data.no,
 		formatDateForSheet(data.date),
@@ -271,11 +278,11 @@ function createChallan(data) {
 		dbSheet.getRange(lastRow, 1, 1, DB_HEADERS.length).setBackground('#F5F3EE');
 	}
 
-	// 2. Write challan to its own named tab (like MANJEET CHALLAN pattern)
-	writeChallanTab(data);
+	// Write challan to its own named tab (like MANJEET CHALLAN pattern)
+	// writeChallanTab(data);
 
-	// 3. Deduct from Stock
-	deductStockForChallan(data.items);
+	// Deduct stock — pass validated dateStr, never raw data.date
+	deductStockForChallan(data.no, dateStr, data.items || []);
 
 	return { success: true, no: data.no };
 }
@@ -436,45 +443,6 @@ function safeParseJSON(str, fallback) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  STOCK OPERATIONS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function getStock() {
-	const sheet = getSheet(SHEETS.STOCK);
-	ensureHeaders(sheet, STK_HEADERS);
-	const rows = sheetToObjects(sheet, STK_HEADERS);
-	return rows.map((r) => ({
-		name: r['Product Name'],
-		sku: r['SKU'],
-		unit: r['Unit'],
-		qty: Number(r['Qty']),
-		threshold: Number(r['Low Stock Alert']),
-		price: Number(r['Unit Price']),
-	}));
-}
-
-/** Called after challan creation — deducts sold quantities from stock */
-function deductStockForChallan(items) {
-	const sheet = getSheet(SHEETS.STOCK);
-	const values = sheet.getDataRange().getValues();
-
-	items.forEach((item) => {
-		const descLower = item.desc.toLowerCase();
-		for (let i = 1; i < values.length; i++) {
-			const stockName = String(values[i][0]).toLowerCase();
-			if (stockName.includes(descLower) || descLower.includes(stockName)) {
-				const currentQty = Number(values[i][3]);
-				const newQty = Math.max(0, currentQty - Number(item.qty));
-				sheet.getRange(i + 1, 4).setValue(newQty);
-				sheet.getRange(i + 1, 7).setValue(nowISO());
-				values[i][3] = newQty; // Update in-memory too to avoid double-deduction
-				break;
-			}
-		}
-	});
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
 //  ACCOUNT OPERATIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -532,17 +500,6 @@ function deleteAccount(rowIndex) {
 	sheet.deleteRow(rowIndex);
 	return { success: true };
 }
-
-// function testUpdateAcc() {
-//   updateAccount(18, {
-//     "date": "2026-04-30",
-//     "desc": "ddvf",
-//     "type": "credit",
-//     "amount": 34,
-//     "category": "Challan Payment",
-//     "ref": ""
-// })
-// }
 
 function updateAccount(rowIndex, data) {
 	const sheet = getSheet(SHEETS.ACCOUNT);
@@ -947,12 +904,23 @@ function addStock(data) {
 
 // ── Deduct stock OUT when challan is created ──────────────────────────────────
 function deductStockForChallan(challanNo, date, items) {
+	// Guard against undefined/null inputs
+	if (!date) {
+		Logger.log('deductStockForChallan: date is missing');
+		return { error: 'Date is missing' };
+	}
+	if (!items || !items.length) {
+		Logger.log('deductStockForChallan: no items');
+		return { error: 'No items' };
+	}
+
 	const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(
 		SHEETS.STOCK_LEDGER,
 	);
 	if (!sheet) return { error: 'Stock Ledger sheet not found.' };
 
-	const [year, month, day] = date.substring(0, 10).split('-').map(Number);
+	const safeDateStr = String(date).substring(0, 10); // YYYY-MM-DD
+	const [year, month, day] = safeDateStr.split('-').map(Number);
 	const dateStr = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
 
 	// Accumulate pcs per product from all challan items
