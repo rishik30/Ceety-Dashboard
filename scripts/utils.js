@@ -5,9 +5,22 @@
 function genChallanNo() {
 	return '#C' + Math.random().toString(16).slice(2, 10).toUpperCase();
 }
+
 function genOrderNo() {
-	return '#ORD' + String(S.orderSeq++).padStart(4, '0');
+	if (!S.orders || !S.orders.length) return '#ORD0001';
+
+	// Extract all existing sequence numbers
+	const nums = S.orders
+		.map((o) => {
+			const match = String(o.no).match(/#ORD(\d+)/);
+			return match ? parseInt(match[1], 10) : 0;
+		})
+		.filter((n) => !isNaN(n));
+
+	const max = nums.length ? Math.max(...nums) : 0;
+	return '#ORD' + String(max + 1).padStart(4, '0');
 }
+
 function fmt(n) {
 	return (
 		'₹' +
@@ -20,7 +33,8 @@ function fmt(n) {
 
 function parseAppDate(value) {
 	if (!value) return null;
-	if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+	if (value instanceof Date)
+		return Number.isNaN(value.getTime()) ? null : value;
 
 	const raw = String(value).trim();
 	const ddmmyyyy = raw.match(

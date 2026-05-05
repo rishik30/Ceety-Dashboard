@@ -54,6 +54,10 @@ async function syncAll() {
 				}),
 		);
 		renderAll();
+
+		// Reinit order form now that S.orders is populated
+		initOrderForm();
+
 		toast('Synced with Google Sheets!', 'success');
 	} catch (e) {
 		setSyncState('error', 'Sync failed');
