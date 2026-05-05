@@ -81,6 +81,30 @@ function fmtDate(d) {
 		year: 'numeric',
 	});
 }
+
+function escapeHtml(value = '') {
+	return String(value)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#39;');
+}
+
+function buildChallanItemsTooltip(items = []) {
+	if (!items.length) return 'No items';
+	return items
+		.map((item) => {
+			const desc = item.desc || item.product || 'Item';
+			const qty = Number(item.qty) || 0;
+			const unit = item.unit || 'pcs';
+			const price = Number(item.price) || 0;
+			const total = Number(item.total) || qty * price;
+			return `${desc}: ${qty} ${unit} @ ${fmt(price)} = ${fmt(total)}`;
+		})
+		.join('\n');
+}
+
 function today() {
 	const date = new Date();
 	const yyyy = date.getFullYear();

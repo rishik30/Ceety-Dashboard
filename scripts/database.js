@@ -15,13 +15,16 @@ function renderDatabase() {
   if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">No records found.</td></tr>'; return; }
   tbody.innerHTML = filtered.map(c => {
     const profit = getChallanProfit(c, costMap);
+    const items = c.items || [];
+    const itemsLabel = `${items.length} item(s)`;
+    const itemsTooltip = escapeHtml(buildChallanItemsTooltip(items));
     return `
     <tr>
       <td style="font-family:var(--mono);font-size:12px;">${c.no}</td>
       <td>${fmtDate(c.date)}</td>
       <td style="font-weight:500;">${c.party}</td>
       <td style="color:var(--text2);">${c.company||'—'}</td>
-      <td>${(c.items||[]).length} item(s)</td>
+      <td><span title="${itemsTooltip}" style="cursor:help;text-decoration:underline dotted;">${itemsLabel}</span></td>
       <td style="font-family:var(--mono);">${fmt(c.subtotal)}</td>
       <td style="font-family:var(--mono);">${fmt(c.adj)}</td>
       <td style="font-family:var(--mono);font-weight:600;color:var(--accent);">${fmt(c.total)}</td>
