@@ -720,3 +720,8 @@ tbody tr:hover {
 	background: var(--border);
 	border-radius: 3px;
 }
+.acc-period-btn.active-period {
+	background: var(--ink);
+	color: #fff;
+	border-color: var(--ink);
+}

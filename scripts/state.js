@@ -14,6 +14,7 @@ const S = {
 	orderSeq: 1,
 	orderItems: [],
 	orderOverheads: [],
+	accPeriod: 'month',
 };
 
 // ── Restore saved URL ──
@@ -27,4 +28,5 @@ window.addEventListener('DOMContentLoaded', () => {
 	initOrderForm();
 	renderOverview();
 	document.getElementById('offline-banner').classList.add('show');
+	setPeriod('month');
 });

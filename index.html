@@ -124,11 +124,19 @@
 						<div class="form-grid cols3">
 							<div class="form-group">
 								<label>From</label
-								><input type="date" id="profit-from" onchange="renderOverview()" />
+								><input
+									type="date"
+									id="profit-from"
+									onchange="renderOverview()"
+								/>
 							</div>
 							<div class="form-group">
 								<label>To</label
-								><input type="date" id="profit-to" onchange="renderOverview()" />
+								><input
+									type="date"
+									id="profit-to"
+									onchange="renderOverview()"
+								/>
 							</div>
 							<div class="form-group">
 								<label>&nbsp;</label>
@@ -139,7 +147,11 @@
 						</div>
 						<div
 							class="stat-grid"
-							style="grid-template-columns: repeat(4, 1fr); margin-top: 16px; margin-bottom: 0"
+							style="
+								grid-template-columns: repeat(4, 1fr);
+								margin-top: 16px;
+								margin-bottom: 0;
+							"
 						>
 							<div class="stat">
 								<div class="stat-label">Challans</div>
@@ -449,30 +461,81 @@
 							↻ Refresh
 						</button>
 					</div>
+
+					<!-- QUICK ENTRY PRESETS -->
+					<div style="margin-bottom: 20px">
+						<div
+							style="
+								font-size: 11px;
+								font-family: var(--mono);
+								color: var(--text3);
+								letter-spacing: 0.8px;
+								text-transform: uppercase;
+								margin-bottom: 8px;
+							"
+						>
+							Quick Entry
+						</div>
+						<div style="display: flex; gap: 8px; flex-wrap: wrap">
+							<button
+								class="btn btn-secondary btn-sm"
+								onclick="applyPreset('challan')"
+							>
+								◈ Challan Payment
+							</button>
+							<button
+								class="btn btn-secondary btn-sm"
+								onclick="applyPreset('supplier')"
+							>
+								◉ Supplier Payment
+							</button>
+							<button
+								class="btn btn-secondary btn-sm"
+								onclick="applyPreset('transport')"
+							>
+								◎ Transport Expense
+							</button>
+							<button
+								class="btn btn-secondary btn-sm"
+								onclick="applyPreset('salary')"
+							>
+								◇ Salary
+							</button>
+							<button
+								class="btn btn-secondary btn-sm"
+								onclick="applyPreset('misc')"
+							>
+								○ Misc Expense
+							</button>
+						</div>
+					</div>
+
+					<!-- ENTRY FORM -->
 					<div class="card">
-						<div class="card-title">New Entry</div>
+						<div class="card-title" id="acc-form-title">New Entry</div>
 						<div class="form-grid cols3">
 							<div class="form-group">
-								<label>Date</label><input type="date" id="acc-date" />
+								<label>Date</label>
+								<input type="date" id="acc-date" />
 							</div>
 							<div class="form-group">
-								<label>Description</label
-								><input
+								<label>Description</label>
+								<input
 									type="text"
 									id="acc-desc"
 									placeholder="e.g. Challan payment — Manjeet"
 								/>
 							</div>
 							<div class="form-group">
-								<label>Type</label
-								><select id="acc-type">
+								<label>Type</label>
+								<select id="acc-type">
 									<option value="credit">Credit (Income)</option>
 									<option value="debit">Debit (Expense)</option>
 								</select>
 							</div>
 							<div class="form-group">
-								<label>Amount (₹)</label
-								><input
+								<label>Amount (₹)</label>
+								<input
 									type="number"
 									id="acc-amount"
 									placeholder="0.00"
@@ -481,8 +544,8 @@
 								/>
 							</div>
 							<div class="form-group">
-								<label>Category</label
-								><select id="acc-category">
+								<label>Category</label>
+								<select id="acc-category">
 									<option>Challan Payment</option>
 									<option>Purchase</option>
 									<option>Salary</option>
@@ -492,8 +555,8 @@
 								</select>
 							</div>
 							<div class="form-group">
-								<label>Reference / Note</label
-								><input
+								<label>Reference / Note</label>
+								<input
 									type="text"
 									id="acc-ref"
 									placeholder="e.g. Challan #C90AB83E"
@@ -504,7 +567,7 @@
 							<button
 								class="btn btn-primary"
 								id="acc-btn"
-								onclick="submitAccountEntry()"
+								onclick="addAccountEntry()"
 							>
 								+ Add Entry
 							</button>
@@ -513,11 +576,9 @@
 							</button>
 						</div>
 					</div>
-					<div class="stat-grid" style="grid-template-columns: repeat(4, 1fr)">
-						<div class="stat">
-							<div class="stat-label">Total Entries</div>
-							<div class="stat-val" id="acc-total-count">0</div>
-						</div>
+
+					<!-- SUMMARY STATS -->
+					<div class="stat-grid" style="grid-template-columns: repeat(3, 1fr)">
 						<div class="stat">
 							<div class="stat-label">Total Credits</div>
 							<div class="stat-val green" id="acc-total-credit">₹0</div>
@@ -531,8 +592,293 @@
 							<div class="stat-val" id="acc-net">₹0</div>
 						</div>
 					</div>
+
+					<!-- FILTERS -->
 					<div class="card">
-						<div class="card-title">Ledger</div>
+						<div
+							style="
+								display: flex;
+								gap: 10px;
+								flex-wrap: wrap;
+								align-items: flex-end;
+							"
+						>
+							<!-- Date range presets -->
+							<div>
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--text3);
+										margin-bottom: 5px;
+									"
+								>
+									Period
+								</div>
+								<div style="display: flex; gap: 6px">
+									<button
+										class="btn btn-secondary btn-sm acc-period-btn active-period"
+										id="period-month"
+										onclick="setPeriod('month')"
+									>
+										This Month
+									</button>
+									<button
+										class="btn btn-secondary btn-sm acc-period-btn"
+										id="period-lastmonth"
+										onclick="setPeriod('lastmonth')"
+									>
+										Last Month
+									</button>
+									<button
+										class="btn btn-secondary btn-sm acc-period-btn"
+										id="period-year"
+										onclick="setPeriod('year')"
+									>
+										This Year
+									</button>
+									<button
+										class="btn btn-secondary btn-sm acc-period-btn"
+										id="period-all"
+										onclick="setPeriod('all')"
+									>
+										All Time
+									</button>
+									<button
+										class="btn btn-secondary btn-sm acc-period-btn"
+										id="period-custom"
+										onclick="setPeriod('custom')"
+									>
+										Custom
+									</button>
+								</div>
+							</div>
+
+							<!-- Custom date range — hidden unless custom selected -->
+							<div
+								id="custom-range"
+								style="
+									display: none;
+									gap: 8px;
+									align-items: flex-end;
+									display: none;
+								"
+							>
+								<div class="form-group" style="margin: 0">
+									<label>From</label>
+									<input
+										type="date"
+										id="acc-from"
+										onchange="renderAccounts()"
+									/>
+								</div>
+								<div class="form-group" style="margin: 0">
+									<label>To</label>
+									<input type="date" id="acc-to" onchange="renderAccounts()" />
+								</div>
+							</div>
+
+							<!-- Type filter -->
+							<div>
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--text3);
+										margin-bottom: 5px;
+									"
+								>
+									Type
+								</div>
+								<select
+									id="acc-filter-type"
+									onchange="renderAccounts()"
+									style="font-size: 12px; padding: 7px 10px; width: auto"
+								>
+									<option value="all">All</option>
+									<option value="credit">Credit</option>
+									<option value="debit">Debit</option>
+								</select>
+							</div>
+
+							<!-- Category filter -->
+							<div>
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--text3);
+										margin-bottom: 5px;
+									"
+								>
+									Category
+								</div>
+								<select
+									id="acc-filter-cat"
+									onchange="renderAccounts()"
+									style="font-size: 12px; padding: 7px 10px; width: auto"
+								>
+									<option value="all">All Categories</option>
+									<option>Challan Payment</option>
+									<option>Purchase</option>
+									<option>Salary</option>
+									<option>Transport</option>
+									<option>Miscellaneous</option>
+									<option>Other</option>
+								</select>
+							</div>
+
+							<!-- Search -->
+							<div style="flex: 1; min-width: 180px">
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--text3);
+										margin-bottom: 5px;
+									"
+								>
+									Search
+								</div>
+								<input
+									type="text"
+									id="acc-search"
+									placeholder="Description, reference…"
+									oninput="renderAccounts()"
+									style="font-size: 12px"
+								/>
+							</div>
+
+							<!-- Clear filters -->
+							<button
+								class="btn btn-secondary btn-sm"
+								onclick="clearAccFilters()"
+								style="align-self: flex-end"
+							>
+								✕ Clear
+							</button>
+						</div>
+
+						<!-- Filtered stats — updates with filters -->
+						<div
+							style="
+								display: grid;
+								grid-template-columns: repeat(3, 1fr);
+								gap: 12px;
+								margin-top: 16px;
+								padding-top: 16px;
+								border-top: 1px solid var(--border);
+							"
+						>
+							<div
+								style="
+									background: var(--accent-light);
+									border-radius: 8px;
+									padding: 12px 14px;
+								"
+							>
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--accent);
+										margin-bottom: 2px;
+									"
+								>
+									FILTERED CREDITS
+								</div>
+								<div
+									style="
+										font-size: 18px;
+										font-weight: 600;
+										font-family: var(--mono);
+										color: var(--accent);
+									"
+									id="acc-filtered-credit"
+								>
+									₹0
+								</div>
+							</div>
+							<div
+								style="
+									background: var(--danger-light);
+									border-radius: 8px;
+									padding: 12px 14px;
+								"
+							>
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--danger);
+										margin-bottom: 2px;
+									"
+								>
+									FILTERED DEBITS
+								</div>
+								<div
+									style="
+										font-size: 18px;
+										font-weight: 600;
+										font-family: var(--mono);
+										color: var(--danger);
+									"
+									id="acc-filtered-debit"
+								>
+									₹0
+								</div>
+							</div>
+							<div
+								style="
+									background: var(--surface2);
+									border-radius: 8px;
+									padding: 12px 14px;
+								"
+							>
+								<div
+									style="
+										font-size: 11px;
+										font-family: var(--mono);
+										color: var(--text2);
+										margin-bottom: 2px;
+									"
+								>
+									FILTERED NET
+								</div>
+								<div
+									style="
+										font-size: 18px;
+										font-weight: 600;
+										font-family: var(--mono);
+									"
+									id="acc-filtered-net"
+								>
+									₹0
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- LEDGER TABLE -->
+					<div class="card">
+						<div
+							style="
+								display: flex;
+								justify-content: space-between;
+								align-items: center;
+								margin-bottom: 14px;
+							"
+						>
+							<div class="card-title" style="margin-bottom: 0">Ledger</div>
+							<span
+								id="acc-row-count"
+								style="
+									font-family: var(--mono);
+									font-size: 12px;
+									color: var(--text3);
+								"
+							></span>
+						</div>
 						<div class="table-wrap">
 							<table>
 								<thead>
@@ -543,12 +889,13 @@
 										<th>Type</th>
 										<th>Amount</th>
 										<th>Reference</th>
+										<th>Balance</th>
 										<th></th>
 									</tr>
 								</thead>
 								<tbody id="acc-body">
 									<tr>
-										<td colspan="7" class="empty">No entries yet.</td>
+										<td colspan="8" class="empty">No entries yet.</td>
 									</tr>
 								</tbody>
 							</table>
