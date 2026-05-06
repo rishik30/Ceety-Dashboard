@@ -387,31 +387,32 @@ function renderOrders() {
 			const itemsSummary = (o.items || [])
 				.map((i) => `${i.qty} ${i.unit} ${i.product} @ ${fmt(i.rate)}`)
 				.join('\n');
+			const escapedItemsSummary = escapeHtml(itemsSummary);
 
 			const deliveryTd = o.delivery
-				? `<td style="font-size:12px;${isOverdue ? 'color:var(--danger);font-weight:500;' : ''}">${fmtDate(o.delivery)}${isOverdue ? ' ⚠' : ''}</td>`
+				? `<td class="orders-cell-date" style="${isOverdue ? 'color:var(--danger);font-weight:500;' : ''}">${fmtDate(o.delivery)}${isOverdue ? ' ⚠' : ''}</td>`
 				: '<td style="color:var(--text3);">—</td>';
 
 			return `
       <tr>
-        <td style="font-family:var(--mono);font-size:12px;">${o.no}</td>
-        <td style="font-size:12px;">${fmtDate(o.date)}</td>
+        <td class="orders-cell-mono">${o.no}</td>
+        <td class="orders-cell-date">${fmtDate(o.date)}</td>
         ${deliveryTd}
-        <td style="font-weight:500;">${o.supplier}</td>
+        <td class="orders-cell-supplier">${o.supplier}</td>
         <td>
-          <span title="${itemsSummary}"
-            style="cursor:help;font-size:12px;color:var(--text2);">
+          <span title="${escapedItemsSummary}"
+            class="orders-items-summary">
             ${(o.items || []).length} item(s)
           </span>
         </td>
-        <td style="font-family:var(--mono);font-size:12px;">${fmt(o.subtotal || 0)}</td>
-        <td style="font-family:var(--mono);font-size:12px;color:var(--text2);">${fmt(o.overheadTotal || 0)}</td>
-        <td style="font-family:var(--mono);font-weight:500;">${fmt(o.total)}</td>
-        <td style="font-family:var(--mono);color:var(--accent);">${fmt(o.paid || 0)}</td>
-        <td style="font-family:var(--mono);color:${due > 0 ? 'var(--danger)' : 'var(--accent)'};">${fmt(due)}</td>
-        <td><span class="badge ${statusBadge[o.status] || 'badge-warn'}">${o.status}</span></td>
-        <td style="color:var(--text2);font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${o.notes || '—'}</td>
-        <td style="white-space:nowrap;">
+        <td class="orders-cell-money">${fmt(o.subtotal || 0)}</td>
+        <td class="orders-cell-money orders-cell-muted">${fmt(o.overheadTotal || 0)}</td>
+        <td class="orders-cell-money orders-cell-strong">${fmt(o.total)}</td>
+        <td class="orders-cell-money orders-cell-positive">${fmt(o.paid || 0)}</td>
+        <td class="orders-cell-money ${due > 0 ? 'orders-cell-negative' : 'orders-cell-positive'}">${fmt(due)}</td>
+        <td><span class="badge orders-status-badge ${statusBadge[o.status] || 'badge-warn'}">${o.status}</span></td>
+        <td class="orders-cell-notes" title="${escapeHtml(o.notes || '—')}">${o.notes || '—'}</td>
+        <td class="orders-actions">
           <button class="btn btn-secondary btn-sm" onclick="updateAmountPaid('${o.no}')">₹ Pay</button>
           <button class="btn btn-danger btn-sm" onclick="deleteOrder('${o.no}')">Del</button>
         </td>

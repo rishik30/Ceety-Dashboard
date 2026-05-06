@@ -145,14 +145,7 @@
 								</button>
 							</div>
 						</div>
-						<div
-							class="stat-grid"
-							style="
-								grid-template-columns: repeat(4, 1fr);
-								margin-top: 16px;
-								margin-bottom: 0;
-							"
-						>
+						<div class="stat-grid stat-grid-4 stat-grid-compact">
 							<div class="stat">
 								<div class="stat-label">Challans</div>
 								<div class="stat-val" id="profit-count">0</div>
@@ -174,7 +167,7 @@
 					<div class="card">
 						<div class="card-title">Recent Challans</div>
 						<div class="table-wrap">
-							<table>
+							<table class="orders-table">
 								<thead>
 									<tr>
 										<th>Challan #</th>
@@ -192,7 +185,7 @@
 							</table>
 						</div>
 					</div>
-					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px">
+					<div class="dashboard-two-col">
 						<div class="card">
 							<div class="card-title">Stock Summary</div>
 							<div id="stock-summary"><div class="empty">No stock.</div></div>
@@ -214,14 +207,7 @@
 							<p>Fills challan tab, database, and stock automatically.</p>
 						</div>
 					</div>
-					<div
-						style="
-							display: grid;
-							grid-template-columns: 1fr 380px;
-							gap: 24px;
-							align-items: start;
-						"
-					>
+					<div class="dashboard-split">
 						<div>
 							<div class="card">
 								<div class="card-title">Party Details</div>
@@ -578,7 +564,7 @@
 					</div>
 
 					<!-- SUMMARY STATS -->
-					<div class="stat-grid" style="grid-template-columns: repeat(3, 1fr)">
+					<div class="stat-grid stat-grid-3">
 						<div class="stat">
 							<div class="stat-label">Total Credits</div>
 							<div class="stat-val green" id="acc-total-credit">₹0</div>
@@ -760,16 +746,7 @@
 						</div>
 
 						<!-- Filtered stats — updates with filters -->
-						<div
-							style="
-								display: grid;
-								grid-template-columns: repeat(3, 1fr);
-								gap: 12px;
-								margin-top: 16px;
-								padding-top: 16px;
-								border-top: 1px solid var(--border);
-							"
-						>
+						<div class="summary-mini-grid">
 							<div
 								style="
 									background: var(--accent-light);
@@ -919,10 +896,7 @@
 					</div>
 
 					<!-- SUMMARY STATS -->
-					<div
-						class="stat-grid"
-						style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px"
-					>
+					<div class="stat-grid stat-grid-4" style="margin-bottom: 20px">
 						<div class="stat">
 							<div class="stat-label">Total Orders</div>
 							<div class="stat-val" id="po-stat-total">0</div>
@@ -1229,14 +1203,7 @@
 					</div>
 
 					<!-- LIVE BALANCE CARDS -->
-					<div
-						style="
-							display: grid;
-							grid-template-columns: 1fr 1fr;
-							gap: 16px;
-							margin-bottom: 20px;
-						"
-					>
+					<div class="stock-balance-grid">
 						<div
 							style="
 								background: var(--surface);
@@ -1269,13 +1236,7 @@
 									>In Stock</span
 								>
 							</div>
-							<div
-								style="
-									display: grid;
-									grid-template-columns: repeat(3, 1fr);
-									gap: 10px;
-								"
-							>
+							<div class="stock-card-metrics">
 								<div
 									style="
 										text-align: center;
@@ -1424,13 +1385,7 @@
 									>In Stock</span
 								>
 							</div>
-							<div
-								style="
-									display: grid;
-									grid-template-columns: repeat(3, 1fr);
-									gap: 10px;
-								"
-							>
+							<div class="stock-card-metrics">
 								<div
 									style="
 										text-align: center;
