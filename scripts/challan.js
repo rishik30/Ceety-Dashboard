@@ -201,13 +201,7 @@ async function loadChallans() {
 	}
 }
 
-function printChallan() {
-	updatePreview();
-
-	// Clone the preview content
-	const preview = document.querySelector('.challan-preview').cloneNode(true);
-
-	// Create a dedicated print-only container
+function printPreviewElement(preview) {
 	const printContainer = document.createElement('div');
 	printContainer.id = 'print-container';
 	printContainer.style.cssText = `
@@ -227,4 +221,58 @@ function printChallan() {
 	// Restore after print dialog closes
 	document.querySelector('.shell').style.display = '';
 	document.body.removeChild(printContainer);
+}
+
+function printChallan() {
+	updatePreview();
+	const preview = document.querySelector('.challan-preview').cloneNode(true);
+	printPreviewElement(preview);
+}
+
+function createChallanPreviewElement(challan) {
+	const subtotal = Number(challan.subtotal) || 0;
+	const adj = Number(challan.adj) || 0;
+	const total = Number(challan.total) || subtotal + adj;
+	const items = challan.items || [];
+	const wrapper = document.createElement('div');
+	wrapper.className = 'challan-preview';
+	wrapper.innerHTML = `
+    <div class="ch-header">
+      <div><div class="ch-brand">Ceety</div><div class="ch-sub">Delivery Challan</div></div>
+      <div class="ch-no">${escapeHtml(challan.no || '—')}</div>
+    </div>
+    <div class="ch-meta">
+      <div class="ch-meta-item"><div class="lbl">Name</div><div class="val">${escapeHtml(challan.party || '—')}</div></div>
+      <div class="ch-meta-item"><div class="lbl">Company</div><div class="val">${escapeHtml(challan.company || '—')}</div></div>
+      <div class="ch-meta-item"><div class="lbl">Date</div><div class="val">${fmtDate(challan.date)}</div></div>
+      <div class="ch-meta-item"><div class="lbl">Notes</div><div class="val" style="font-size:11px;color:var(--text2);">${escapeHtml(challan.notes || '—')}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Description</th><th>Qty</th><th>Unit</th><th>Pcs/U</th><th>Price</th><th>Total</th></tr></thead>
+      <tbody>
+        ${items
+					.map((item) => {
+						const qty = Number(item.qty) || 0;
+						const price = Number(item.price) || 0;
+						return `<tr><td>${escapeHtml(item.desc || item.product || '—')}</td><td>${qty}</td><td>${escapeHtml(item.unit || '—')}</td><td>${escapeHtml(item.pcsUnit || '—')}</td><td>${fmt(price)}</td><td>${fmt(qty * price)}</td></tr>`;
+					})
+					.join('')}
+      </tbody>
+    </table>
+    <div class="ch-total">
+      <div class="ch-total-row"><span style="color:var(--text2)">Subtotal</span><span>${fmt(subtotal)}</span></div>
+      <div class="ch-total-row"><span style="color:var(--text2)">Adjustment</span><span>${fmt(adj)}</span></div>
+      <div class="ch-total-row final"><span>Total</span><span>${fmt(total)}</span></div>
+    </div>
+  `;
+	return wrapper;
+}
+
+function printSavedChallan(no) {
+	const challan = S.challans.find((c) => c.no === no);
+	if (!challan) {
+		toast(`Could not find challan ${no}.`, 'error');
+		return;
+	}
+	printPreviewElement(createChallanPreviewElement(challan));
 }

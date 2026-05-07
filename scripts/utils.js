@@ -174,3 +174,29 @@ function confirmModal({
 		document.addEventListener('keydown', onKeydown);
 	});
 }
+
+function calcPerPiecePriceFromItem(item) {
+	// Detect product type from description
+	const desc = (item.desc || '').toLowerCase();
+	const isSmall = desc.includes('small');
+	const conv = isSmall
+		? CONVERSION['Small Ceety']
+		: CONVERSION['Regular Ceety'];
+
+	const unit = (item.unit || '').toLowerCase();
+	let pcsInUnit = 1;
+
+	if (unit === 'bag') pcsInUnit = conv.pktPerBag * conv.pcsPerPkt;
+	if (unit === 'pkt') pcsInUnit = conv.pcsPerPkt;
+	if (unit === 'pcs') pcsInUnit = 1;
+
+	if (!pcsInUnit || !item.price) return null;
+	return item.price / pcsInUnit;
+}
+
+function fmtPaise(n) {
+	// Per-piece prices are tiny — show in paise if less than ₹1
+	if (n === null || n === undefined) return '—';
+	if (n < 1) return (n * 100).toFixed(0) + ' p'; // paise
+	return '₹' + n.toFixed(4);
+}
